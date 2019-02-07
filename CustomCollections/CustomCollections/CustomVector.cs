@@ -106,7 +106,7 @@ namespace CustomCollections
         {
             if (array.Length - arrayIndex < Count)
             {
-                Console.WriteLine("The array is small!");
+                Console.WriteLine("You can't do this. The array is too small or arrayIndex is in the end of array");
                 return;
             }
             for (int i = 0; i < Count; i++)
