@@ -10,20 +10,34 @@ namespace CustomCollections
         private T[] _vector;
 
         public int Count { get; private set; } = 0;
-        public int Length { get; private set; } = 1;
-        public bool IsReadOnly { get; } = false;
+        public int Capacity { get; private set; } = 1;
+        public bool IsReadOnly => false;
 
         public CustomVector() => _vector = new T[1];
 
         public T this[int index]
         {
-            get => _vector[index];
-            set => _vector[index] = value;
+            get
+            {
+                if (index < 0 || index >= Count)
+                {
+                    throw new ArgumentOutOfRangeException();
+                }
+                return  _vector[index];
+            }
+            set
+            {
+                if (index < 0 || index >= Count)
+                {
+                    throw new ArgumentOutOfRangeException();
+                }
+                _vector[index] = value;
+            }
         }
 
         public void Add(T item)
         {
-            if(!IsEmptyPosition()) GrowSize();
+            if(!HasAvailableMemory()) IncreaseSize();
             _vector[Count] = item;
             Count++;
         }
@@ -32,37 +46,16 @@ namespace CustomCollections
         {
             _vector = new T[1];
             Count = 0;
-            Length = 1;
+            Capacity = 1;
         }
 
         public bool Contains(T item)
         {
-            if (item.Equals(null))
-            {
-                throw new ArgumentNullException();
-            }
-
-            for (int i = 0; i < Count; i++)
-            {
-                if (_vector[i].Equals(item))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return IndexOf(item) > -1;
         }
 
         public bool Remove(T item)
         {
-            if (IsReadOnly)
-            {
-                throw new NotSupportedException();
-            }
-            if (item.Equals(null))
-            {
-                throw new ArgumentNullException();
-            }
-             
             var index = -1;
             for (int i = 0; i < Count; i++)
             {
@@ -72,7 +65,7 @@ namespace CustomCollections
                     break;
                 }
             }
-            if (!index.Equals(-1))
+            if (index > -1)
             {
                 RemoveAt(index);
                 return true;
@@ -102,8 +95,7 @@ namespace CustomCollections
                 throw new ArgumentOutOfRangeException();
             }
 
-            if (!IsEmptyPosition()) GrowSize();
-            var j = 0;
+            if (!HasAvailableMemory()) IncreaseSize();
             for (int i = Count; i > index; i--)
             {
                 _vector[i] = _vector[i - 1];
@@ -115,11 +107,6 @@ namespace CustomCollections
 
         public int IndexOf(T item)
         {
-            if (item.Equals(null))
-            {
-                throw new ArgumentNullException();
-            }
-
             for (int i = 0; i < Count; i++)
             {
                 if (_vector[i].Equals(item))
@@ -154,9 +141,9 @@ namespace CustomCollections
 
         public IEnumerator<T> GetEnumerator()
         {
-            foreach (var item in _vector)
+            for(int i = 0; i < Count; i++)
             {
-                yield return item;
+                yield return _vector[i];
             }
         }
 
@@ -165,19 +152,19 @@ namespace CustomCollections
             return GetEnumerator();
         }
 
-        private bool IsEmptyPosition()
+        private bool HasAvailableMemory()
         {
-            return Count < Length;
+            return Count < Capacity;
         }
 
-        private void GrowSize()
+        private void IncreaseSize()
         {
-            var newVector = new T[Length * 2];
-            for (int i = 0; i < Length; i++)
+            var newVector = new T[Capacity * 2];
+            for (int i = 0; i < Capacity; i++)
             {
                 newVector[i] = _vector[i];
             }
-            Length *= 2;
+            Capacity *= 2;
             _vector = newVector;
         }
     }
