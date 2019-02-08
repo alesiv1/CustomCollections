@@ -10,9 +10,10 @@ namespace CustomCollections
         private T[] _vector;
 
         public int Count { get; private set; } = 0;
+        public int Length { get; private set; } = 1;
         public bool IsReadOnly { get; } = false;
 
-        public CustomVector() => _vector = new T[0];
+        public CustomVector() => _vector = new T[1];
 
         public T this[int index]
         {
@@ -22,20 +23,16 @@ namespace CustomCollections
 
         public void Add(T item)
         {
-            var newVector = new T[Count + 1];
-            for (int i = 0; i < Count; i++)
-            {
-                newVector[i] = _vector[i];
-            }
-            newVector[Count] = item;
+            if(!IsEmptyPosition()) GrowSize();
+            _vector[Count] = item;
             Count++;
-            _vector = newVector;
         }
 
         public void Clear()
         {
-            _vector = new T[0];
+            _vector = new T[1];
             Count = 0;
+            Length = 1;
         }
 
         public bool Contains(T item)
@@ -90,17 +87,12 @@ namespace CustomCollections
                 throw new ArgumentOutOfRangeException();
             }
 
-            var newVector = new T[Count - 1];
-            for (int i = 0; i < index; i++)
+            for (int i = index; i < Count - 1; i++)
             {
-                newVector[i] = _vector[i];
-            }
-            for (int i = index + 1; i < Count; i++)
-            {
-                newVector[i - 1] = _vector[i];
+                _vector[i] = _vector[i + 1];
             }
             Count--;
-            _vector = newVector;
+            _vector[Count] = default(T);
         }
 
         public void Insert(int index, T item)
@@ -110,22 +102,15 @@ namespace CustomCollections
                 throw new ArgumentOutOfRangeException();
             }
 
-            Count++;
-            var newVector = new T[Count];
+            if (!IsEmptyPosition()) GrowSize();
             var j = 0;
-            for (int i = 0; i < Count; i++)
+            for (int i = Count; i > index; i--)
             {
-                if (i == index)
-                {
-                    newVector[i] = item;
-                }
-                else
-                {
-                    newVector[i] = _vector[j];
-                    j++;
-                }
+                _vector[i] = _vector[i - 1];
             }
-            _vector = newVector;
+
+            _vector[index] = item;
+            Count++;
         }
 
         public int IndexOf(T item)
@@ -178,6 +163,22 @@ namespace CustomCollections
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        private bool IsEmptyPosition()
+        {
+            return Count < Length;
+        }
+
+        private void GrowSize()
+        {
+            var newVector = new T[Length * 2];
+            for (int i = 0; i < Length; i++)
+            {
+                newVector[i] = _vector[i];
+            }
+            Length *= 2;
+            _vector = newVector;
         }
     }
 }
