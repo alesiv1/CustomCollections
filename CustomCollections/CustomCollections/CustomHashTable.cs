@@ -6,119 +6,77 @@ using System.Linq;
 
 namespace CustomCollections
 {
-    class CustomHashTable<TKey, TValue> : IDictionary
+    class CustomHashTable<TKey, TValue> : IDictionary<TKey, TValue>
     {
-        private static Tuple<TKey, TValue>[] _hashTable;
+        private static KeyValuePair<TKey, TValue>[] _hashTable;
+
+        public int Count { get; private set; } = 0;
+        public int Capacity { get; private set; } = 1;
+        public bool IsReadOnly => false;
+
+        public ICollection<TKey> Keys => GetKeys();
+        public ICollection<TValue> Values => GetValues();
 
         public CustomHashTable()
         {
-            _hashTable = new Tuple<TKey, TValue>[1];
-            _hashTable[0] = new Tuple<TKey, TValue>(default(TKey), default(TValue));
+            _hashTable = new KeyValuePair<TKey, TValue>[1];
         }
-
-        public int Count { get; private set; } = 0;
-        public int Length { get; private set; } = 1;
-        public bool IsSynchronized { get; } = false;
-        public object SyncRoot { get; }
-        public bool IsFixedSize { get; } = false;
-        public bool IsReadOnly { get; private set; } = true;
-        public ICollection Keys { get; }
-        public ICollection Values { get; } 
 
         public void Clear()
         {
-            _hashTable = new Tuple<TKey, TValue>[1];
+            _hashTable = new KeyValuePair<TKey, TValue>[1];
             Count = 0;
-            Length = 1;
-            IsReadOnly = true;
+            Capacity = 1;
         }
 
-        public bool Contains(object value)
+        public TValue this[TKey key]
         {
-            return _hashTable
-                .Select(item2 => item2.Item2)
-                .Contains((TValue) value);
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
         }
 
-        public object this[object key]
+        public void Add(KeyValuePair<TKey, TValue> item)
         {
-            get
-            {
-                var position = GetPosition((TKey)key, Length);
-                if (position < Length)
-                {
-                    return _hashTable[position];
-                }
-                throw new ArgumentNullException(nameof(key));
-            }
-
-            set
-            {
-                if (value == null) throw new ArgumentNullException(nameof(value));
-                var position = GetPosition((TKey)key, Length);
-                if (position < Length)
-                {
-                    _hashTable[position] = new Tuple<TKey, TValue>((TKey)key,default(TValue));
-                }
-                else
-                {
-                    throw new Exception("Error set value");
-                }
-            }
+            throw new NotImplementedException();
         }
 
-        public void CopyTo(Array array, int index)
+        public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            array.CopyTo(_hashTable.Select(value => value.Item2).ToArray(), index);
+            throw new NotImplementedException();
         }
 
-        public void Add(object key, object value)
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            var position = GetPosition((TKey)key, _hashTable.Length);
-            if (_hashTable[position] == null)
-            {
-                _hashTable[position] = new Tuple<TKey, TValue>(default(TKey), default(TValue));
-            }
-            if (_hashTable[position].Item1.Equals(key))
-            {
-                throw new Exception("This key already exist!");
-            }
-            Count++;
-            if (Count >= Length)
-            {
-                GrowAndReHash();
-            }
-            position = GetPosition((TKey)key, _hashTable.Length);
-            if (_hashTable[position] == null)
-            {
-                _hashTable[position] = new Tuple<TKey, TValue>(default(TKey), default(TValue));
-            }
-            _hashTable[position] = new Tuple<TKey, TValue>((TKey)key, (TValue)value);
-            IsReadOnly = false;
-            SetAllDefaultValue();
+            throw new NotImplementedException();
         }
 
-        public void Remove(object key)
+        public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            _hashTable = _hashTable.Where(s => !s.Item1.Equals(key)).ToArray();
+            throw new NotImplementedException();
+        }
+        public void Add(TKey key, TValue value)
+        {
+            throw new NotImplementedException();
         }
 
-        public TValue Get(object key)
+        public bool ContainsKey(TKey key)
         {
-            var position = GetPosition((TKey)key, _hashTable.Length);
-            if (position < Length && !_hashTable[position].Equals(new Tuple<TKey, TValue>(default(TKey), default(TValue))))
-            {
-                return _hashTable[position].Item2;
-            }
-            throw new Exception("This key isn't exist!");
+            throw new NotImplementedException();
         }
 
-        public IDictionaryEnumerator GetEnumerator()
+        public bool Remove(TKey key)
         {
-            return _hashTable
-                .Where(key => !key.Item1.Equals(default(TKey)))
-                .ToDictionary(item => item.Item1, item => item.Item2)
-                .GetEnumerator();
+            throw new NotImplementedException();
+        }
+
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        {
+            throw new NotImplementedException();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -126,38 +84,37 @@ namespace CustomCollections
             return GetEnumerator();
         }
 
-        private int GetPosition(TKey key, int length)
+        private int GetPosition(TKey key)
         {
             var hash = key.GetHashCode();
-            var pos = Math.Abs(hash % length);
+            var pos = Math.Abs(hash % Capacity);
             return pos;
         }
 
-        private void GrowAndReHash()
+        private ICollection<TKey> GetKeys()
         {
-            Length *= 2;
-            var newItems = new Tuple<TKey, TValue>[_hashTable.Length * 2];
+            List<TKey> keys = new List<TKey>();
             foreach (var item in _hashTable)
             {
-                var pos = GetPosition(item.Item1, newItems.Length);
-                if (newItems[pos] == null)
+                if (item.Key != null)
                 {
-                    newItems[pos] = new Tuple<TKey, TValue>(default(TKey), default(TValue));
+                    keys.Add(item.Key);
                 }
-                newItems[pos] = new Tuple<TKey, TValue>(item.Item1, item.Item2);
             }
-            _hashTable = newItems;
+            return keys;
         }
 
-        private void SetAllDefaultValue()
+        private ICollection<TValue> GetValues()
         {
-            for (int i = 0; i < Length; i++)
+            List<TValue> values = new List<TValue>();
+            foreach (var item in _hashTable)
             {
-                if (_hashTable[i] == null)
+                if (item.Value != null)
                 {
-                    _hashTable[i] = new Tuple<TKey, TValue>(default(TKey), default(TValue));
+                    values.Add(item.Value);
                 }
             }
+            return values;
         }
     }
 }
