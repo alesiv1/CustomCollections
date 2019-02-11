@@ -29,27 +29,27 @@ namespace CustomCollections
         {
             if (item.Key == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException("key");
             }
             var position = GetPosition(item.Key);
-            return _hashTable[position].Equals(item);
+            return EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(_hashTable[position], item);
         }
 
         public bool ContainsKey(TKey key)
         {
             if (key == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException("key");
             }
             var position = GetPosition(key);
-            return _hashTable[position].Key.Equals(key);
+            return EqualityComparer<TKey>.Default.Equals(_hashTable[position].Key,key);
         }
 
         public bool TryGetValue(TKey key, out TValue value)
         {
             if (key == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException("key");
             }
             var position = GetPosition(key);
             if (position >= 0 && position < Capacity)
@@ -67,7 +67,7 @@ namespace CustomCollections
             {
                 if (key == null)
                 {
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("key");
                 }
                 var position = GetPosition(key);
                 return _hashTable[position].Value;
@@ -76,7 +76,7 @@ namespace CustomCollections
             {
                 if (key == null)
                 {
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("key");
                 }
                 var position = GetPosition(key);
                 _hashTable[position] = new KeyValuePair<TKey, TValue>(key, value);
@@ -87,11 +87,11 @@ namespace CustomCollections
         {
             if (array == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException("array");
             }
             if (arrayIndex < 0 || array.Length - arrayIndex < Count)
             {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("arrayIndex");
             }
 
             try
@@ -115,11 +115,11 @@ namespace CustomCollections
         {
             if (item.Key == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException("key");
             }
             if (ContainsKey(item.Key))
             {
-                throw new ArgumentException();
+                throw new ArgumentException("key");
             }
             if (!HasAvailableMemory()) IncreaseSize();
             var position = GetPosition(item.Key);
@@ -141,7 +141,7 @@ namespace CustomCollections
         {
             if (key == null || !ContainsKey(key))
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException("key");
             }
             var position = GetPosition(key);
             if (Contains(_hashTable[position]))
@@ -157,7 +157,7 @@ namespace CustomCollections
         {
             foreach (var item in _hashTable)
             {
-                if (!item.Equals(null))
+                if (!item.Equals(null) || !EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(item, new KeyValuePair<TKey, TValue>()))
                 {
                     yield return item;
                 }
@@ -181,7 +181,7 @@ namespace CustomCollections
             List<TKey> keys = new List<TKey>();
             foreach (var item in _hashTable)
             {
-                if (item.Key != null && !item.Equals(new KeyValuePair<TKey, TValue>()))
+                if (item.Key != null && !EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(item, new KeyValuePair<TKey, TValue>()))
                 {
                     keys.Add(item.Key);
                 }
@@ -194,7 +194,7 @@ namespace CustomCollections
             List<TValue> values = new List<TValue>();
             foreach (var item in _hashTable)
             {
-                if (item.Value != null && !item.Equals(new KeyValuePair<TKey, TValue>()))
+                if (item.Value != null && !EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(item, new KeyValuePair<TKey, TValue>()))
                 {
                     values.Add(item.Value);
                 }
@@ -212,7 +212,7 @@ namespace CustomCollections
             var newHashTable = new KeyValuePair<TKey, TValue>[Capacity * 2];
             for(int i = 0; i < Capacity; i++)
             {
-                if (!_hashTable[i].Equals(null) || !_hashTable[i].Equals(new KeyValuePair<TKey, TValue>()))
+                if (_hashTable[i].Key != null && !EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(_hashTable[i], new KeyValuePair<TKey, TValue>()))
                 {
                     newHashTable[i] = _hashTable[i];
                 }
