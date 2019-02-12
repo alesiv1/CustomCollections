@@ -17,11 +17,11 @@ namespace CustomCollections
         public ICollection<TKey> Keys => GetKeys();
         public ICollection<TValue> Values => GetValues();
 
-        public CustomHashTable() => _hashTable = new KeyValuePair<TKey, TValue>[1];
+        public CustomHashTable() => _hashTable = new KeyValuePair<TKey, TValue>[2];
 
         public void Clear()
         {
-            _hashTable = new KeyValuePair<TKey, TValue>[1];
+            _hashTable = new KeyValuePair<TKey, TValue>[2];
             Count = 0;
         }
 
@@ -55,7 +55,10 @@ namespace CustomCollections
             if (position >= 0 && position < Capacity)
             {
                 value = _hashTable[position].Value;
-                return true;
+                if (value != null && !EqualityComparer<TValue>.Default.Equals(value, default(TValue)))
+                {
+                    return true;
+                }
             }
             value = default(TValue);
             return false;
@@ -93,21 +96,13 @@ namespace CustomCollections
             {
                 throw new ArgumentOutOfRangeException("arrayIndex");
             }
-
-            try
+            for (int i = 0; i < Capacity; i++)
             {
-                for (int i = 0; i < Capacity; i++)
+                if (_hashTable[i].Key != null && !EqualityComparer<TKey>.Default.Equals(_hashTable[i].Key, default(TKey)))
                 {
-                    if (_hashTable[i].Key != null)
-                    {
-                        array[arrayIndex] = _hashTable[i];
-                        arrayIndex++;
-                    }
+                    array[arrayIndex] = _hashTable[i];
+                    arrayIndex++;
                 }
-            }
-            catch
-            {
-                throw new ArgumentException();
             }
         }
 
@@ -117,11 +112,11 @@ namespace CustomCollections
             {
                 throw new ArgumentNullException("key");
             }
+            if (!HasAvailableMemory()) IncreaseSize();
             if (ContainsKey(item.Key))
             {
                 throw new ArgumentException("key");
             }
-            if (!HasAvailableMemory()) IncreaseSize();
             var position = GetPosition(item.Key);
             _hashTable[position] = item;
             Count++;
@@ -139,12 +134,12 @@ namespace CustomCollections
 
         public bool Remove(TKey key)
         {
-            if (key == null || !ContainsKey(key))
+            if (key == null)
             {
                 throw new ArgumentNullException("key");
             }
             var position = GetPosition(key);
-            if (Contains(_hashTable[position]))
+            if (_hashTable[position].Key != null && !EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(_hashTable[position], new KeyValuePair<TKey, TValue>()))
             {
                 _hashTable[position] = new KeyValuePair<TKey, TValue>();
                 Count--;
@@ -172,7 +167,9 @@ namespace CustomCollections
         private int GetPosition(TKey key)
         {
             var hash = key.GetHashCode();
-            var pos = Math.Abs(hash % Capacity);
+            var capacity = Capacity;
+            if (hash >= Capacity) capacity = hash + 1;
+            var pos = Math.Abs(hash % capacity);
             return pos;
         }
 
@@ -204,7 +201,7 @@ namespace CustomCollections
 
         private bool HasAvailableMemory()
         {
-            return Count < Capacity;
+            return Count + 1 < Capacity;
         }
 
         private void IncreaseSize()
