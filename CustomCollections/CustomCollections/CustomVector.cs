@@ -21,7 +21,7 @@ namespace CustomCollections
             {
                 if (index < 0 || index >= Count)
                 {
-                    throw new ArgumentOutOfRangeException("index");
+                    throw new ArgumentOutOfRangeException(nameof(index));
                 }
                 return  _vector[index];
             }
@@ -29,7 +29,7 @@ namespace CustomCollections
             {
                 if (index < 0 || index >= Count)
                 {
-                    throw new ArgumentOutOfRangeException("index");
+                    throw new ArgumentOutOfRangeException(nameof(index));
                 }
                 _vector[index] = value;
             }
@@ -68,7 +68,7 @@ namespace CustomCollections
         {
             if (index >= Count || index < 0)
             {
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
             }
 
             for (int i = index; i < Count - 1; i++)
@@ -83,7 +83,7 @@ namespace CustomCollections
         {
             if (index < 0 || index >= Count)
             {
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
             }
 
             if (!HasAvailableMemory()) IncreaseSize();
@@ -112,15 +112,15 @@ namespace CustomCollections
         {
             if (array == null)
             {
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
             }
             if (arrayIndex < 0)
             {
-                throw new ArgumentOutOfRangeException("arrayIndex");
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex));
             }
             if (array.Length - arrayIndex < Count)
             {
-                throw new ArgumentException("arrayIndex");
+                throw new ArgumentException(nameof(arrayIndex));
             }
 
             for (int i = 0; i < Count; i++)
