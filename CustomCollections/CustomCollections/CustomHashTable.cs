@@ -6,7 +6,7 @@ namespace CustomCollections
 {
     class CustomHashTable<TKey, TValue> : IDictionary<TKey, TValue>
     {
-        private static KeyValuePair<TKey, TValue>[] _hashTable;
+        private KeyValuePair<TKey, TValue>[] _hashTable;
 
         public int Count { get; private set; } = 0;
 
@@ -17,11 +17,11 @@ namespace CustomCollections
         public ICollection<TKey> Keys => GetKeys();
         public ICollection<TValue> Values => GetValues();
 
-        public CustomHashTable() => _hashTable = new KeyValuePair<TKey, TValue>[2];
+        public CustomHashTable() => _hashTable = new KeyValuePair<TKey, TValue>[8];
 
         public void Clear()
         {
-            _hashTable = new KeyValuePair<TKey, TValue>[2];
+            _hashTable = new KeyValuePair<TKey, TValue>[8];
             Count = 0;
         }
 
@@ -29,33 +29,33 @@ namespace CustomCollections
         {
             if (item.Key == null)
             {
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(item.Key));
             }
             var position = GetPosition(item.Key);
-            return EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(_hashTable[position], item);
+            return IsItemsEqual(item, _hashTable[position]);
         }
 
         public bool ContainsKey(TKey key)
         {
             if (key == null)
             {
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
             }
             var position = GetPosition(key);
-            return EqualityComparer<TKey>.Default.Equals(_hashTable[position].Key,key);
+            return IsKeysEqual(key, _hashTable[position].Key);
         }
 
         public bool TryGetValue(TKey key, out TValue value)
         {
             if (key == null)
             {
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
             }
             var position = GetPosition(key);
             if (position >= 0 && position < Capacity)
             {
                 value = _hashTable[position].Value;
-                if (value != null && !EqualityComparer<TValue>.Default.Equals(value, default(TValue)))
+                if (!IsItemsEqual(_hashTable[position], default(KeyValuePair<TKey, TValue>)))
                 {
                     return true;
                 }
@@ -70,7 +70,7 @@ namespace CustomCollections
             {
                 if (key == null)
                 {
-                    throw new ArgumentNullException("key");
+                    throw new ArgumentNullException(nameof(key));
                 }
                 var position = GetPosition(key);
                 return _hashTable[position].Value;
@@ -79,7 +79,7 @@ namespace CustomCollections
             {
                 if (key == null)
                 {
-                    throw new ArgumentNullException("key");
+                    throw new ArgumentNullException(nameof(key));
                 }
                 var position = GetPosition(key);
                 _hashTable[position] = new KeyValuePair<TKey, TValue>(key, value);
@@ -90,15 +90,15 @@ namespace CustomCollections
         {
             if (array == null)
             {
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
             }
             if (arrayIndex < 0 || array.Length - arrayIndex < Count)
             {
-                throw new ArgumentOutOfRangeException("arrayIndex");
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex));
             }
             for (int i = 0; i < Capacity; i++)
             {
-                if (_hashTable[i].Key != null && !EqualityComparer<TKey>.Default.Equals(_hashTable[i].Key, default(TKey)))
+                if (!IsKeysEqual(_hashTable[i].Key, default(TKey)))
                 {
                     array[arrayIndex] = _hashTable[i];
                     arrayIndex++;
@@ -110,12 +110,12 @@ namespace CustomCollections
         {
             if (item.Key == null)
             {
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(item.Key));
             }
             if (!HasAvailableMemory()) IncreaseSize();
             if (ContainsKey(item.Key))
             {
-                throw new ArgumentException("key");
+                throw new ArgumentException(nameof(item.Key));
             }
             var position = GetPosition(item.Key);
             _hashTable[position] = item;
@@ -136,12 +136,12 @@ namespace CustomCollections
         {
             if (key == null)
             {
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
             }
             var position = GetPosition(key);
-            if (_hashTable[position].Key != null && !EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(_hashTable[position], new KeyValuePair<TKey, TValue>()))
+            if (!IsItemsEqual(_hashTable[position], default(KeyValuePair<TKey, TValue>)))
             {
-                _hashTable[position] = new KeyValuePair<TKey, TValue>();
+                _hashTable[position] = default(KeyValuePair<TKey, TValue>);
                 Count--;
                 return true;
             }
@@ -152,7 +152,7 @@ namespace CustomCollections
         {
             foreach (var item in _hashTable)
             {
-                if (!item.Equals(null) || !EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(item, new KeyValuePair<TKey, TValue>()))
+                if (!IsItemsEqual(item, default(KeyValuePair<TKey, TValue>)))
                 {
                     yield return item;
                 }
@@ -167,9 +167,7 @@ namespace CustomCollections
         private int GetPosition(TKey key)
         {
             var hash = key.GetHashCode();
-            var capacity = Capacity;
-            if (hash >= Capacity) capacity = hash + 1;
-            var pos = Math.Abs(hash % capacity);
+            var pos = Math.Abs(hash) % Capacity;
             return pos;
         }
 
@@ -178,7 +176,7 @@ namespace CustomCollections
             List<TKey> keys = new List<TKey>();
             foreach (var item in _hashTable)
             {
-                if (item.Key != null && !EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(item, new KeyValuePair<TKey, TValue>()))
+                if (!IsItemsEqual(item, default(KeyValuePair<TKey, TValue>)))
                 {
                     keys.Add(item.Key);
                 }
@@ -191,7 +189,7 @@ namespace CustomCollections
             List<TValue> values = new List<TValue>();
             foreach (var item in _hashTable)
             {
-                if (item.Value != null && !EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(item, new KeyValuePair<TKey, TValue>()))
+                if (!IsItemsEqual(item, default(KeyValuePair<TKey, TValue>)))
                 {
                     values.Add(item.Value);
                 }
@@ -201,20 +199,32 @@ namespace CustomCollections
 
         private bool HasAvailableMemory()
         {
-            return Count + 1 < Capacity;
+            return Count < Capacity;
         }
 
         private void IncreaseSize()
         {
             var newHashTable = new KeyValuePair<TKey, TValue>[Capacity * 2];
+            var position = 0;
             for(int i = 0; i < Capacity; i++)
             {
-                if (_hashTable[i].Key != null && !EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(_hashTable[i], new KeyValuePair<TKey, TValue>()))
+                if (!IsItemsEqual(_hashTable[i], default(KeyValuePair<TKey, TValue>)))
                 {
-                    newHashTable[i] = _hashTable[i];
+                    position = GetPosition(_hashTable[i].Key);
+                    newHashTable[position] = _hashTable[i];
                 }
             }
             _hashTable = newHashTable;
+        }
+
+        private bool IsKeysEqual(TKey leftKey, TKey rightKey)
+        {
+            return EqualityComparer<TKey>.Default.Equals(leftKey, rightKey);
+        }
+
+        private bool IsItemsEqual(KeyValuePair<TKey, TValue> leftItem, KeyValuePair<TKey, TValue> rightItem)
+        {
+            return EqualityComparer<KeyValuePair<TKey, TValue>>.Default.Equals(leftItem, rightItem);
         }
     }
 }
