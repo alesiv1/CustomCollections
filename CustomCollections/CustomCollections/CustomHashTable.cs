@@ -54,9 +54,9 @@ namespace CustomCollections
             var position = GetPosition(key);
             if (position >= 0 && position < Capacity)
             {
-                value = _hashTable[position].Value;
                 if (!IsItemsEqual(_hashTable[position], default(KeyValuePair<TKey, TValue>)))
                 {
+                    value = _hashTable[position].Value;
                     return true;
                 }
             }
@@ -98,7 +98,7 @@ namespace CustomCollections
             }
             for (int i = 0; i < Capacity; i++)
             {
-                if (!IsKeysEqual(_hashTable[i].Key, default(TKey)))
+                if (!IsItemsEqual(_hashTable[i], default(KeyValuePair<TKey, TValue>)))
                 {
                     array[arrayIndex] = _hashTable[i];
                     arrayIndex++;
@@ -110,14 +110,18 @@ namespace CustomCollections
         {
             if (item.Key == null)
             {
-                throw new ArgumentNullException(nameof(item.Key));
+                throw new ArgumentNullException();
             }
             if (!HasAvailableMemory()) IncreaseSize();
             if (ContainsKey(item.Key))
             {
-                throw new ArgumentException(nameof(item.Key));
+                throw new ArgumentException();
             }
             var position = GetPosition(item.Key);
+            if (!IsItemsEqual(_hashTable[position],default(KeyValuePair<TKey, TValue>)))
+            {
+                throw new ArgumentException();
+            }
             _hashTable[position] = item;
             Count++;
         }
