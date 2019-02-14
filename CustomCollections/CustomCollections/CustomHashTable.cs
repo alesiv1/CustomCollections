@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace CustomCollections
 {
-    class CustomHashTable<TKey, TValue> : IDictionary<TKey, TValue>
+    public class CustomHashTable<TKey, TValue> : IDictionary<TKey, TValue>
     {
         private LinkedList<KeyValuePair<TKey, TValue>>[] _hashTable;
 
