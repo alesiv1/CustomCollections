@@ -221,5 +221,29 @@ namespace CustomCollectionsTests
                 Assert.IsTrue(sameElements.Contains(elemen));
             }
         }
+
+        [Test]
+        public void AddALotsOfIntegerItems_ItemsAreInTheDictionary()
+        {
+            var hashTable = new CustomHashTable<int, int>();
+
+            for (var index = 1; index <= 1000; index++)
+                hashTable.Add(index, index);
+
+            for (var index = 1; index <= 1000; index++)
+                Assert.AreEqual(index, hashTable[index]);
+        }
+
+        [Test]
+        public void AddALotsOfStringItems_ItemsAreInTheDictionary()
+        {
+            var hashTable = new CustomHashTable<string, string>();
+
+            for (var index = 1; index <= 1000; index++)
+                hashTable.Add($"Key_{index}", $"Value_{index}");
+
+            for (var index = 1; index <= 1000; index++)
+                Assert.AreEqual($"Value_{index}", hashTable[$"Key_{index}"]);
+        }
     }
 }
