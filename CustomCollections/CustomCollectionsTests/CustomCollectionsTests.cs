@@ -229,7 +229,6 @@ namespace CustomCollectionsTests
 
             for (var index = 1; index <= 1000; index++)
                 hashTable.Add(index, index);
-
             for (var index = 1; index <= 1000; index++)
                 Assert.AreEqual(index, hashTable[index]);
         }

@@ -232,7 +232,7 @@ namespace CustomCollections
             return GetEnumerator();
         }
 
-        private int GetPosition(TKey key)
+        private int GetPosition(TKey key, int capacity = 1)
         {
             var hash = 0;
             var prefix = 0;
@@ -241,7 +241,8 @@ namespace CustomCollections
                 prefix++;
                 hash += symbol * prefix;
             }
-            var pos = Math.Abs(hash * key.GetHashCode() % Capacity);
+            if (capacity == 1) capacity = Capacity;
+            var pos = Math.Abs(hash % capacity);
             return pos;
         }
 
@@ -291,7 +292,7 @@ namespace CustomCollections
                 {
                     foreach (var node in _hashTable[i])
                     {
-                        var position = GetPosition(node.Key);
+                        var position = GetPosition(node.Key, Capacity * 2);
                         if(newHashTable[position] == null) newHashTable[position] = new LinkedList<KeyValuePair<TKey, TValue>>();
                         newHashTable[position].AddFirst(node);
                     }
