@@ -165,7 +165,11 @@ namespace CustomCollections
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            return Remove(item.Key);
+            if (Contains(item))
+            {
+                return Remove(item.Key);
+            }
+            return false;
         }
 
         public bool Remove(TKey key)
@@ -184,15 +188,14 @@ namespace CustomCollections
                     {
                         if (IsKeysEqual(node.Value.Key, key))
                         {
-                            node.Value = node.Next.Value;
                             while (node != null)
                             {
-                                node = node.Next;
                                 if (node.Next != null) node.Value = node.Next.Value;
                                 else
                                 {
                                     break;
                                 }
+                                node = node.Next;
                             }
                             _hashTable[position].RemoveLast();
                             Count--;
@@ -233,13 +236,13 @@ namespace CustomCollections
         private int GetPosition(TKey key)
         {
             var hash = 0;
-            var prefix = 1;
+            var prefix = 0;
             foreach (var symbol in key.ToString())
             {
-                hash += (int)symbol * prefix;
                 prefix++;
+                hash += symbol * prefix;
             }
-            var pos = Math.Abs((hash * key.ToString().Length) % Capacity);
+            var pos = Math.Abs(hash * key.GetHashCode() % Capacity);
             return pos;
         }
 
