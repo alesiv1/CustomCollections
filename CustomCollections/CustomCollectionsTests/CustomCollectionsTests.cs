@@ -244,5 +244,18 @@ namespace CustomCollectionsTests
             for (var index = 1; index <= 1000; index++)
                 Assert.AreEqual($"Value_{index}", hashTable[$"Key_{index}"]);
         }
+
+        [Test]
+        public void ChangeItems_SetAnotherValue_GetFalse()
+        {
+            var hashTable = new CustomHashTable<int, int>();
+
+            for (var index = 1; index <= 100; index++)
+                hashTable.Add(index, index);
+            for (var index = 1; index <= 100; index++)
+                hashTable[index] = 101;
+            for (var index = 1; index <= 100; index++)
+                Assert.IsFalse(index == hashTable[index]);
+        }
     }
 }
