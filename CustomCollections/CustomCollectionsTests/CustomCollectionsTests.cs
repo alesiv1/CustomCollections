@@ -196,6 +196,23 @@ namespace CustomCollectionsTests
         }
 
         [Test]
+        public void Remote_ElementNotFound_ReturnTrue()
+        {
+            var hashTable = new CustomHashTable<int, int>();
+
+            for (var index = 1; index <= 100; index++)
+                hashTable.Add(index, index);
+
+            for (var index = 1; index <= 100; index++)
+            {
+                var isRemote = hashTable.Remove(index);
+                var isElement = hashTable.ContainsKey(index);
+
+                Assert.AreEqual(isRemote, !isElement);
+            }
+        }
+
+        [Test]
         public void GetEnumerator_GetAllElements_GetTrue()
         {
             CustomHashTable<int, string> hashTable = new CustomHashTable<int, string>

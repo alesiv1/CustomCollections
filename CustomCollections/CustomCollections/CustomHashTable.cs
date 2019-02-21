@@ -27,9 +27,11 @@ namespace CustomCollections
             public bool Remove(TK key)
             {
                 var element = this;
+                KeyValueRepository<TK, TV> parent = null;
                 while (!IsKeysEqual(element.Key, key))
                 {
                     if(element.Next == null) break;
+                    parent = element;
                     element = element.Next;
                 }
                 if (!IsKeysEqual(element.Key, key))
@@ -40,9 +42,13 @@ namespace CustomCollections
                 {
                     element.Key = element.Next.Key;
                     element.Value = element.Next.Value;
+                    parent = element;
                     element = element.Next;
                 }
-                element = null;
+                if (parent != null)
+                {
+                    parent.Next = null;
+                }
                 return true;
             }
 
@@ -308,7 +314,15 @@ namespace CustomCollections
             }
             var position = GetPosition(key);
             if (_hashTable[position] == null || !ContainsKey(key)) return false;
-            return _hashTable[position].Remove(key);
+            if (_hashTable[position].EquivalentKeys.Count == 1)
+            {
+                _hashTable[position] = null;
+                Count--;
+                return true;
+            }
+            var isRemote = _hashTable[position].Remove(key);
+            if (isRemote) Count--;
+            return isRemote;
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
