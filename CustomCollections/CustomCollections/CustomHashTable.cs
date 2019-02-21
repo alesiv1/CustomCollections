@@ -5,69 +5,83 @@ using System.ComponentModel;
 
 namespace CustomCollections
 {
-    public class RecordInHashTable<TKey, TValue>
+    public class DataOfHashTable<TKey, TValue>
     {
-        public class RecordsList<TK, TV>
+        public class KeyValueRepository<TK, TV>
         {
             public TK Key { get; set; }
             public TV Value { get; set; }
-            public RecordsList<TK, TV> Next { get; set; }
+            public KeyValueRepository<TK, TV> Next { get; set; }
 
-            public RecordsList(TK key, TV value)
+            public KeyValueRepository(TK key, TV value)
             {
                 this.Key = key;
                 this.Value = value;
             }
 
             public void Add(TK key, TV value)
-            {
-                var lastItem = GetLastItem();
-                lastItem.Next = new RecordsList<TK, TV>(key, value);
+            { 
+                var lastElement = GetLastElement();
+                lastElement.Next = new KeyValueRepository<TK, TV>(key, value);
             }
 
             public bool Remove(TK key)
             {
-                var item = this;
-                while (!IsKeysEqual(item.Key, key) || item.Next != null)
+                var element = this;
+                while (!IsKeysEqual(element.Key, key))
                 {
-                    item = item.Next;
+                    if(element.Next == null) break;
+                    element = element.Next;
                 }
-                if (!IsKeysEqual(item.Key, key))
+                if (!IsKeysEqual(element.Key, key))
                 {
                     return false;
                 }
-                while (item.Next != null)
+                while (element.Next != null)
                 {
-                    item.Key = item.Next.Key;
-                    item.Value = item.Next.Value;
-                    item = item.Next;
+                    element.Key = element.Next.Key;
+                    element.Value = element.Next.Value;
+                    element = element.Next;
                 }
-                item = null;
+                element = null;
                 return true;
             }
 
-            public RecordsList<TK, TV> Get(TK key)
+            public TV GetValue(TK key)
             {
-                var item = this;
-                while (!IsKeysEqual(item.Key, key) || item.Next != null)
-                {
-                    item = item.Next;
-                }
-                if (!IsKeysEqual(item.Key, key))
-                {
-                    throw new ArgumentException(nameof(key));
-                }
-                return item;
+                var element = FindByKey(key);
+                return element.Value;
             }
 
-            private RecordsList<TK, TV> GetLastItem()
+            public void SetValue(TK key, TV value)
             {
-                var item = this;
-                while (item.Next != null)
+                var element = FindByKey(key);
+                if (element != null) element.Value = value;
+            }
+
+            public KeyValueRepository<TK, TV> FindByKey(TK key)
+            {
+                KeyValueRepository<TK, TV> element = this;
+                while (!IsKeysEqual(element.Key, key))
                 {
-                    item = item.Next;
+                    if (element.Next == null) break;
+                    element = element.Next;
                 }
-                return item;
+                if (!IsKeysEqual(element.Key, key))
+                {
+                    return null;
+                }
+                return element;
+            }
+
+            private KeyValueRepository<TK, TV> GetLastElement()
+            {
+                var lastElement = this;
+                while (lastElement.Next != null)
+                {
+                    lastElement = lastElement.Next;
+                }
+                return lastElement;
             }
 
             private bool IsKeysEqual(TK leftKey, TK rightKey)
@@ -76,43 +90,39 @@ namespace CustomCollections
             }
         }
 
-        public int Count { get; private set; }
         public List<TKey> EquivalentKeys { get; private set; }
-        public RecordsList<TKey, TValue> Records { get; set; }
+        private KeyValueRepository<TKey, TValue> RepositoryKeyAndValue { get; set; }
 
-        public RecordInHashTable(TKey key, TValue value)
+        public DataOfHashTable(TKey key, TValue value)
         {
-            this.Records = new RecordsList<TKey, TValue>(key, value);
-            this.Count = 1;
+            this.RepositoryKeyAndValue = new KeyValueRepository<TKey, TValue>(key, value);
             this.EquivalentKeys = new List<TKey>{ key };
         }
 
         public void Add(TKey key, TValue value)
         {
-            if (Records != null)
+            if (RepositoryKeyAndValue != null)
             {
-                Records.Add(key, value);
+                RepositoryKeyAndValue.Add(key, value);
                 EquivalentKeys.Add(key);
             }
             else
             {
-                Records = new RecordsList<TKey, TValue>(key, value);
+                RepositoryKeyAndValue = new KeyValueRepository<TKey, TValue>(key, value);
                 EquivalentKeys = new List<TKey>() { key };
             }
-            Count += 1;
         }
 
-        public RecordsList<TKey, TValue> GetRecord(TKey key)
+        public KeyValueRepository<TKey, TValue> GetRepository()
         {
-            return Records.Get(key);
+            return RepositoryKeyAndValue;
         }
 
         public bool Remove(TKey key)
         {
-            var isRemoved = Records.Remove(key);
+            var isRemoved = RepositoryKeyAndValue.Remove(key);
             if (isRemoved)
             {
-                Count -= 1;
                 EquivalentKeys.Remove(key);
             }
             return isRemoved;
@@ -124,9 +134,11 @@ namespace CustomCollections
         }
     }
 
+    //_______________________________
+
     public class CustomHashTable<TKey, TValue> : IDictionary<TKey, TValue>
     {
-        private RecordInHashTable<TKey, TValue>[] _hashTable;
+        private DataOfHashTable<TKey, TValue>[] _hashTable;
 
         public int Count { get; private set; }
 
@@ -137,11 +149,11 @@ namespace CustomCollections
         public ICollection<TKey> Keys => GetKeys();
         public ICollection<TValue> Values => GetValues();
 
-        public CustomHashTable() => _hashTable = new RecordInHashTable<TKey, TValue>[8];
+        public CustomHashTable() => _hashTable = new DataOfHashTable<TKey, TValue>[8];
 
         public void Clear()
         {
-            _hashTable = new RecordInHashTable<TKey, TValue>[8];
+            _hashTable = new DataOfHashTable<TKey, TValue>[8];
             Count = 0;
         }
 
@@ -156,22 +168,22 @@ namespace CustomCollections
                 var position = GetPosition(key);
                 if (!_hashTable[position].ContainsKey(key))
                 {
-                    throw new ArgumentNullException(nameof(key), "Ku");
+                    throw new ArgumentNullException(nameof(key));
                 }
-                return _hashTable[position].GetRecord(key).Value;
+                return _hashTable[position].GetRepository().GetValue(key);
             }
             set
             {
                 if (key == null)
                 {
-                    throw new ArgumentNullException(nameof(key), "Ku");
+                    throw new ArgumentNullException(nameof(key));
                 }
                 var position = GetPosition(key);
                 if (!_hashTable[position].ContainsKey(key))
                 {
                     throw new ArgumentNullException(nameof(key));
                 }
-                _hashTable[position].GetRecord(key).Value = value;
+                _hashTable[position].GetRepository().SetValue(key, value);
             }
         }
 
@@ -183,7 +195,7 @@ namespace CustomCollections
             }
             var position = GetPosition(item.Key);
             if (_hashTable[position] == null) return false;
-            var value = _hashTable[position].GetRecord(item.Key).Value;
+            var value = _hashTable[position].GetRepository().GetValue(item.Key);
             return IsValuesEqual(value, item.Value);
         }
 
@@ -205,16 +217,17 @@ namespace CustomCollections
                 throw new ArgumentNullException(nameof(key));
             }
             var position = GetPosition(key);
-            try
+            if (_hashTable[position] != null)
             {
-                value = _hashTable[position].GetRecord(key).Value;
-                return true;
+                var element = _hashTable[position].GetRepository().FindByKey(key);
+                if (element != null)
+                {
+                    value = element.GetValue(key);
+                    return true;
+                }
             }
-            catch
-            {
-                value = default(TValue);
-                return false;
-            }
+            value = default(TValue);
+            return false;
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
@@ -231,12 +244,12 @@ namespace CustomCollections
             {
                 if (_hashTable[i] != null)
                 {
-                    var record = _hashTable[i].Records;
-                    while (record != null)
+                    var repository = _hashTable[i].GetRepository();
+                    while (repository != null)
                     {
-                        array[arrayIndex] = new KeyValuePair<TKey, TValue>(record.Key, record.Value);
+                        array[arrayIndex] = new KeyValuePair<TKey, TValue>(repository.Key, repository.Value);
                         arrayIndex++;
-                        record = record.Next;
+                        repository = repository.Next;
                     }
                 }
             }
@@ -257,7 +270,7 @@ namespace CustomCollections
 
             if (_hashTable[position] == null)
             {
-                _hashTable[position] = new RecordInHashTable<TKey, TValue>(item.Key, item.Value);
+                _hashTable[position] = new DataOfHashTable<TKey, TValue>(item.Key, item.Value);
             }
             else
             {
@@ -288,16 +301,16 @@ namespace CustomCollections
             }
             var position = GetPosition(key);
             if (_hashTable[position] == null) return false;
-            return _hashTable[position].ContainsKey(key) && _hashTable[position].Remove(key);
+            return _hashTable[position].Remove(key);
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            foreach (var item in _hashTable)
+            foreach (var element in _hashTable)
             {
-                if (item != null)
+                if (element != null)
                 {
-                    var record = item.Records;
+                    var record = element.GetRepository();
                     while (record != null)
                     {
                         yield return new KeyValuePair<TKey, TValue>(record.Key, record.Value);
@@ -312,7 +325,7 @@ namespace CustomCollections
             return GetEnumerator();
         }
 
-        private int GetPosition(TKey key, int capacity = 1)
+        private int GetPosition(TKey key)
         {
             var hash = 0;
             var prefix = 0;
@@ -321,7 +334,19 @@ namespace CustomCollections
                 prefix++;
                 hash += symbol * prefix;
             }
-            if (capacity == 1) capacity = Capacity;
+            var pos = Math.Abs(hash % Capacity);
+            return pos;
+        }
+
+        private int GetPosition(TKey key, int capacity)
+        {
+            var hash = 0;
+            var prefix = 0;
+            foreach (var symbol in key.ToString())
+            {
+                prefix++;
+                hash += symbol * prefix;
+            }
             var pos = Math.Abs(hash % capacity);
             return pos;
         }
@@ -349,7 +374,7 @@ namespace CustomCollections
             {
                 if (item != null)
                 {
-                    var record = item.Records;
+                    var record = item.GetRepository();
                     while(record != null)
                     {
                         values.Add(record.Value);
@@ -362,30 +387,30 @@ namespace CustomCollections
 
         private bool HasAvailableMemory()
         {
-            var oneProsent = Capacity > Count;
-            return oneProsent;
+            var hasAvailableMemory = Capacity > Count;
+            return hasAvailableMemory;
         }
 
         private void IncreaseSize()
         {
-            RecordInHashTable<TKey, TValue>[] newHashTable = new RecordInHashTable<TKey, TValue>[Capacity * 2];
+            DataOfHashTable<TKey, TValue>[] newHashTable = new DataOfHashTable<TKey, TValue>[Capacity * 2];
                 for (int i = 0; i < Capacity; i++)
             {
                 if (_hashTable[i] != null)
                 {
-                    var record = _hashTable[i].Records;
-                    while(record != null)
+                    var repository = _hashTable[i].GetRepository();
+                    while(repository != null)
                     {
-                        var position = GetPosition(record.Key, Capacity * 2);
+                        var position = GetPosition(repository.Key, Capacity * 2);
                         if (newHashTable[position] == null)
                         {
-                            newHashTable[position] = new RecordInHashTable<TKey, TValue>(record.Key, record.Value);
+                            newHashTable[position] = new DataOfHashTable<TKey, TValue>(repository.Key, repository.Value);
                         }
                         else
                         {
-                            newHashTable[position].Add(record.Key, record.Value);
+                            newHashTable[position].Add(repository.Key, repository.Value);
                         }
-                        record = record.Next;
+                        repository = repository.Next;
                     }
                 }
             }

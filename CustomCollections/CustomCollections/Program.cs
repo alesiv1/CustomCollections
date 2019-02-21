@@ -12,6 +12,9 @@ namespace CustomCollections
 
             for (var index = 1; index <= 1000; index++)
                 hashTable.Add(index, index);
+            for (var index = 1; index <= 1000; index++)
+                Console.WriteLine(hashTable[index]);
+            Console.ReadKey();
         }
     }
 }
