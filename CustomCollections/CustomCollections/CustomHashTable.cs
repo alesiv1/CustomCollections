@@ -4,13 +4,13 @@ using System.Collections.Generic;
 
 namespace CustomCollections
 {
-    public class DataOfHashTable<TKey, TValue>
+    internal class DataOfHashTable<TKey, TValue>
     {
         public class KeyValueRepository<TK, TV>
         {
-            public TK Key { get; set; }
-            public TV Value { get; set; }
-            public KeyValueRepository<TK, TV> Next { get; set; }
+            public TK Key { get; private set; }
+            public TV Value { get; private set; }
+            public KeyValueRepository<TK, TV> Next { get; private set; }
 
             public KeyValueRepository(TK key, TV value)
             {
@@ -48,8 +48,9 @@ namespace CustomCollections
                 if (parent != null)
                 {
                     parent.Next = null;
+                    return true;
                 }
-                return true;
+                return false;
             }
 
             public TV GetValue(TK key)
@@ -431,9 +432,9 @@ namespace CustomCollections
             return values;
         }
 
-        private bool HasAvailableMemory()
+        private bool HasAvailableMemory(double percentageFilling = 0.7)
         {
-            var hasAvailableMemory = (int)Capacity * 0.7 > Count;
+            var hasAvailableMemory = (int)Capacity * percentageFilling > Count;
             return hasAvailableMemory;
         }
 
