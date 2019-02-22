@@ -4,33 +4,33 @@ using System.Collections.Generic;
 
 namespace CustomCollections
 {
-    internal class DataOfHashTable<TKey, TValue>
+    public class CustomHashTable<TKey, TValue> : IDictionary<TKey, TValue>
     {
-        public class KeyValueRepository<TK, TV>
+        public class CustomHashTableElements
         {
-            public TK Key { get; private set; }
-            public TV Value { get; private set; }
-            public KeyValueRepository<TK, TV> Next { get; private set; }
+            public TKey Key { get; private set; }
+            public TValue Value { get; private set; }
+            public CustomHashTableElements Next { get; private set; }
 
-            public KeyValueRepository(TK key, TV value)
+            public CustomHashTableElements(TKey key, TValue value)
             {
                 this.Key = key;
                 this.Value = value;
             }
 
-            public void Add(TK key, TV value)
-            { 
+            public void Add(TKey key, TValue value)
+            {
                 var lastElement = GetLastElement();
-                lastElement.Next = new KeyValueRepository<TK, TV>(key, value);
+                lastElement.Next = new CustomHashTableElements(key, value);
             }
 
-            public bool Remove(TK key)
+            public bool Remove(TKey key)
             {
                 var element = this;
-                KeyValueRepository<TK, TV> parent = null;
+                CustomHashTableElements parent = null;
                 while (!IsKeysEqual(element.Key, key))
                 {
-                    if(element.Next == null) break;
+                    if (element.Next == null) break;
                     parent = element;
                     element = element.Next;
                 }
@@ -53,21 +53,21 @@ namespace CustomCollections
                 return false;
             }
 
-            public TV GetValue(TK key)
+            public TValue GetValue(TKey key)
             {
                 var element = FindByKey(key);
                 return element.Value;
             }
 
-            public void SetValue(TK key, TV value)
+            public void SetValue(TKey key, TValue value)
             {
                 var element = FindByKey(key);
                 if (element != null) element.Value = value;
             }
 
-            public KeyValueRepository<TK, TV> FindByKey(TK key)
+            public CustomHashTableElements FindByKey(TKey key)
             {
-                KeyValueRepository<TK, TV> element = this;
+                CustomHashTableElements element = this;
                 while (!IsKeysEqual(element.Key, key))
                 {
                     if (element.Next == null) break;
@@ -80,7 +80,7 @@ namespace CustomCollections
                 return element;
             }
 
-            private KeyValueRepository<TK, TV> GetLastElement()
+            private CustomHashTableElements GetLastElement()
             {
                 var lastElement = this;
                 while (lastElement.Next != null)
@@ -90,59 +90,13 @@ namespace CustomCollections
                 return lastElement;
             }
 
-            private bool IsKeysEqual(TK leftKey, TK rightKey)
+            private bool IsKeysEqual(TKey leftKey, TKey rightKey)
             {
-                return EqualityComparer<TK>.Default.Equals(leftKey, rightKey);
+                return EqualityComparer<TKey>.Default.Equals(leftKey, rightKey);
             }
         }
 
-        public List<TKey> EquivalentKeys { get; private set; }
-        private KeyValueRepository<TKey, TValue> RepositoryKeyAndValue { get; set; }
-
-        public DataOfHashTable(TKey key, TValue value)
-        {
-            this.RepositoryKeyAndValue = new KeyValueRepository<TKey, TValue>(key, value);
-            this.EquivalentKeys = new List<TKey>{ key };
-        }
-
-        public void Add(TKey key, TValue value)
-        {
-            if (RepositoryKeyAndValue != null)
-            {
-                RepositoryKeyAndValue.Add(key, value);
-                EquivalentKeys.Add(key);
-            }
-            else
-            {
-                RepositoryKeyAndValue = new KeyValueRepository<TKey, TValue>(key, value);
-                EquivalentKeys = new List<TKey>() { key };
-            }
-        }
-
-        public KeyValueRepository<TKey, TValue> GetRepository()
-        {
-            return RepositoryKeyAndValue;
-        }
-
-        public bool Remove(TKey key)
-        {
-            var isRemoved = RepositoryKeyAndValue.Remove(key);
-            if (isRemoved)
-            {
-                EquivalentKeys.Remove(key);
-            }
-            return isRemoved;
-        }
-
-        public bool ContainsKey(TKey key)
-        {
-            return EquivalentKeys.Contains(key);
-        }
-    }
-
-    public class CustomHashTable<TKey, TValue> : IDictionary<TKey, TValue>
-    {
-        private DataOfHashTable<TKey, TValue>[] _hashTable;
+        private CustomHashTableElements[] _hashTable;
 
         public int Count { get; private set; }
 
@@ -153,11 +107,11 @@ namespace CustomCollections
         public ICollection<TKey> Keys => GetKeys();
         public ICollection<TValue> Values => GetValues();
 
-        public CustomHashTable() => _hashTable = new DataOfHashTable<TKey, TValue>[8];
+        public CustomHashTable() => _hashTable = new CustomHashTableElements[8];
 
         public void Clear()
         {
-            _hashTable = new DataOfHashTable<TKey, TValue>[8];
+            _hashTable = new CustomHashTableElements[8];
             Count = 0;
         }
 
@@ -170,11 +124,12 @@ namespace CustomCollections
                     throw new ArgumentNullException(nameof(key));
                 }
                 var position = GetPosition(key);
-                if (!_hashTable[position].ContainsKey(key))
+                var element = _hashTable[position].FindByKey(key);
+                if (element == null)
                 {
-                    throw new ArgumentNullException(nameof(key));
+                    throw new ArgumentNullException();
                 }
-                return _hashTable[position].GetRepository().GetValue(key);
+                return element.Value;
             }
             set
             {
@@ -183,11 +138,12 @@ namespace CustomCollections
                     throw new ArgumentNullException(nameof(key));
                 }
                 var position = GetPosition(key);
-                if (!_hashTable[position].ContainsKey(key))
+                var element = _hashTable[position].FindByKey(key);
+                if (element == null)
                 {
-                    throw new ArgumentNullException(nameof(key));
+                    throw new ArgumentNullException();
                 }
-                _hashTable[position].GetRepository().SetValue(key, value);
+               element.SetValue(key, value);
             }
         }
 
@@ -199,7 +155,7 @@ namespace CustomCollections
             }
             var position = GetPosition(item.Key);
             if (_hashTable[position] == null) return false;
-            var value = _hashTable[position].GetRepository().GetValue(item.Key);
+            var value = _hashTable[position].GetValue(item.Key);
             return IsValuesEqual(value, item.Value);
         }
 
@@ -211,7 +167,8 @@ namespace CustomCollections
             }
             var position = GetPosition(key);
             if (_hashTable[position] == null) return false;
-            return _hashTable[position].ContainsKey(key);
+            var element = _hashTable[position].FindByKey(key);
+            return element != null;
         }
 
         public bool TryGetValue(TKey key, out TValue value)
@@ -223,7 +180,7 @@ namespace CustomCollections
             var position = GetPosition(key);
             if (_hashTable[position] != null)
             {
-                var element = _hashTable[position].GetRepository().FindByKey(key);
+                var element = _hashTable[position].FindByKey(key);
                 if (element != null)
                 {
                     value = element.Value;
@@ -244,28 +201,10 @@ namespace CustomCollections
             {
                 throw new ArgumentOutOfRangeException(nameof(arrayIndex));
             }
-            //for (int i = 0; i < Capacity; i++)
-            //{
-            //    if (_hashTable[i] != null)
-            //    {
-            //        var repository = _hashTable[i].GetRepository();
-            //        while (repository != null)
-            //        {
-            //            array[arrayIndex] = new KeyValuePair<TKey, TValue>(repository.Key, repository.Value);
-            //            arrayIndex++;
-            //            repository = repository.Next;
-            //        }
-            //    }
-            //}
-            foreach (var data in GetAllData())
+            foreach (var element in this)
             {
-                var repository = data.GetRepository();
-                while (repository != null)
-                {
-                    array[arrayIndex] = new KeyValuePair<TKey, TValue>(repository.Key, repository.Value);
-                    arrayIndex++;
-                    repository = repository.Next;
-                }
+                array[arrayIndex] = new KeyValuePair<TKey, TValue>(element.Key, element.Value);
+                arrayIndex++;
             }
         }
 
@@ -284,7 +223,7 @@ namespace CustomCollections
 
             if (_hashTable[position] == null)
             {
-                _hashTable[position] = new DataOfHashTable<TKey, TValue>(item.Key, item.Value);
+                _hashTable[position] = new CustomHashTableElements(item.Key, item.Value);
             }
             else
             {
@@ -300,11 +239,8 @@ namespace CustomCollections
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            if (Contains(item))
-            {
-                return Remove(item.Key);
-            }
-            return false;
+            if (!Contains(item)) return false;
+            return Remove(item.Key);
         }
 
         public bool Remove(TKey key)
@@ -315,7 +251,7 @@ namespace CustomCollections
             }
             var position = GetPosition(key);
             if (_hashTable[position] == null || !ContainsKey(key)) return false;
-            if (_hashTable[position].EquivalentKeys.Count == 1)
+            if (_hashTable[position].Next == null)
             {
                 _hashTable[position] = null;
                 Count--;
@@ -328,25 +264,13 @@ namespace CustomCollections
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            //foreach (var element in _hashTable)
-            //{
-            //    if (element != null)
-            //    {
-            //        var repository = element.GetRepository();
-            //        while (repository != null)
-            //        {
-            //            yield return new KeyValuePair<TKey, TValue>(repository.Key, repository.Value);
-            //            repository = repository.Next;
-            //        }
-            //    }
-            //}
-            foreach (var data in GetAllData())
+            foreach (var items in _hashTable)
             {
-                var repository = data.GetRepository();
-                while (repository != null)
+                var element = items;
+                while (element != null)
                 {
-                    yield return new KeyValuePair<TKey, TValue>(repository.Key, repository.Value);
-                    repository = repository.Next;
+                    yield return new KeyValuePair<TKey, TValue>(element.Key, element.Value);
+                    element = element.Next;
                 }
             }
         }
@@ -385,22 +309,9 @@ namespace CustomCollections
         private ICollection<TKey> GetKeys()
         {
             List<TKey> keys = new List<TKey>();
-            //foreach (var item in _hashTable)
-            //{
-            //    if (item != null)
-            //    {
-            //        foreach (var node in item.EquivalentKeys)
-            //        {
-            //            keys.Add(node);
-            //        }
-            //    }
-            //}
-            foreach (var data in GetAllData())
+            foreach (var element in this)
             {
-               foreach (var key in data.EquivalentKeys)
-               {
-                        keys.Add(key);
-               }
+               keys.Add(element.Key);
             }
             return keys;
         }
@@ -408,90 +319,35 @@ namespace CustomCollections
         private ICollection<TValue> GetValues()
         {
             List<TValue> values = new List<TValue>();
-            //foreach (var item in _hashTable)
-            //{
-            //    if (item != null)
-            //    {
-            //        var repository = item.GetRepository();
-            //        while(repository != null)
-            //        {
-            //            values.Add(repository.Value);
-            //            repository = repository.Next;
-            //        }
-            //    }
-            //}
-            foreach (var data in GetAllData())
+            foreach (var element in this)
             {
-                var repository = data.GetRepository();
-                while (repository != null)
-                {
-                    values.Add(repository.Value);
-                    repository = repository.Next;
-                }
+                values.Add(element.Value);
             }
             return values;
         }
 
         private bool HasAvailableMemory(double percentageFilling = 0.7)
         {
-            var hasAvailableMemory = (int)Capacity * percentageFilling > Count;
+            var hasAvailableMemory = (int) Capacity * percentageFilling > Count;
             return hasAvailableMemory;
         }
 
         private void IncreaseSize()
         {
-            DataOfHashTable<TKey, TValue>[] newHashTable = new DataOfHashTable<TKey, TValue>[Capacity * 2];
-            //for (int i = 0; i < Capacity; i++)
-            //{
-            //    if (_hashTable[i] != null)
-            //    {
-            //        var repository = _hashTable[i].GetRepository();
-            //        while(repository != null)
-            //        {
-            //            var position = GetPosition(repository.Key, Capacity * 2);
-            //            if (newHashTable[position] == null)
-            //            {
-            //                newHashTable[position] = new DataOfHashTable<TKey, TValue>(repository.Key, repository.Value);
-            //            }
-            //            else
-            //            {
-            //                newHashTable[position].Add(repository.Key, repository.Value);
-            //            }
-            //            repository = repository.Next;
-            //        }
-            //    }
-            //}
-            foreach (var data in GetAllData())
+            CustomHashTableElements[] newHashTable = new CustomHashTableElements[Capacity * 2];
+            foreach (var element in this)
             {
-                var repository = data.GetRepository();
-                while (repository != null)
-                {
-                    var position = GetPosition(repository.Key, Capacity * 2);
-                    if (newHashTable[position] == null)
-                    {
-                        newHashTable[position] = new DataOfHashTable<TKey, TValue>(repository.Key, repository.Value);
-                    }
-                    else
-                    {
-                        newHashTable[position].Add(repository.Key, repository.Value);
-                    }
-                    repository = repository.Next;
-                }
+               var position = GetPosition(element.Key, Capacity * 2);
+               if (newHashTable[position] == null)
+               {
+                    newHashTable[position] = new CustomHashTableElements(element.Key, element.Value);
+               }
+               else
+               {
+                    newHashTable[position].Add(element.Key, element.Value);
+               }
             }
             _hashTable = newHashTable;
-        }
-
-        private List<DataOfHashTable<TKey, TValue>> GetAllData()
-        {
-            var allData = new List<DataOfHashTable<TKey, TValue>>();
-            for (int i = 0; i < Capacity; i++)
-            {
-                if (_hashTable[i] != null)
-                {
-                    allData.Add(_hashTable[i]);
-                }
-            }
-            return allData;
         }
 
         private bool IsValuesEqual(TValue leftItem, TValue rightItem)
