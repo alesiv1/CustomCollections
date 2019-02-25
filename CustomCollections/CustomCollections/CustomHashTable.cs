@@ -56,6 +56,10 @@ namespace CustomCollections
             public TValue GetValue(TKey key)
             {
                 var element = FindByKey(key);
+                if (element == null)
+                {
+                    throw new ArgumentNullException(nameof(element));
+                }
                 return element.Value;
             }
 
@@ -63,6 +67,7 @@ namespace CustomCollections
             {
                 var element = FindByKey(key);
                 if (element != null) element.Value = value;
+                throw new ArgumentNullException(nameof(element));
             }
 
             public CustomHashTableElements FindByKey(TKey key)
@@ -124,12 +129,8 @@ namespace CustomCollections
                     throw new ArgumentNullException(nameof(key));
                 }
                 var position = GetPosition(key);
-                var element = _hashTable[position].FindByKey(key);
-                if (element == null)
-                {
-                    throw new ArgumentNullException();
-                }
-                return element.Value;
+                var value = _hashTable[position].GetValue(key);
+                return value;
             }
             set
             {
@@ -138,12 +139,7 @@ namespace CustomCollections
                     throw new ArgumentNullException(nameof(key));
                 }
                 var position = GetPosition(key);
-                var element = _hashTable[position].FindByKey(key);
-                if (element == null)
-                {
-                    throw new ArgumentNullException();
-                }
-               element.SetValue(key, value);
+                _hashTable[position].SetValue(key, value);
             }
         }
 
@@ -308,7 +304,7 @@ namespace CustomCollections
 
         private ICollection<TKey> GetKeys()
         {
-            List<TKey> keys = new List<TKey>();
+            var keys = new List<TKey>();
             foreach (var element in this)
             {
                keys.Add(element.Key);
@@ -318,7 +314,7 @@ namespace CustomCollections
 
         private ICollection<TValue> GetValues()
         {
-            List<TValue> values = new List<TValue>();
+            var values = new List<TValue>();
             foreach (var element in this)
             {
                 values.Add(element.Value);
