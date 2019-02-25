@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace CustomCollections
 {
@@ -54,7 +52,7 @@ namespace CustomCollections
             if (!HasAvailableMemory()) IncreaseSize();
             if (ContainsKey(item.Key))
             {
-                throw new ArgumentException();
+                throw new ArgumentException("This key is already exist in hash table", nameof(item.Key));
             }
             var position = GetPosition(item.Key);
             if (_hashTable[position] == null)
@@ -68,7 +66,6 @@ namespace CustomCollections
                 {
                     element = element.Next;
                 }
-
                 element.Next = new CustomHashTableElement(item.Key, item.Value);
             }
             Count++;
@@ -122,8 +119,7 @@ namespace CustomCollections
                 throw new ArgumentNullException(nameof(key));
             }
             var element = GetElementByKey(key);
-            if (element != null) return true;
-            return false;
+            return element != null;
         }
 
         public bool TryGetValue(TKey key, out TValue value)
@@ -212,11 +208,11 @@ namespace CustomCollections
             return GetEnumerator();
         }
 
-        private int GetPosition(TKey key, bool isForExpansion = false)
+        private int GetPosition(TKey key, bool isExpands = false)
         {
             var hash = 0;
             var prefix = 0;
-            var capacity = isForExpansion ? Capacity * 2 : Capacity;
+            var capacity = isExpands ? Capacity * 2 : Capacity;
             foreach (var symbol in key.ToString())
             {
                 prefix++;
@@ -228,7 +224,7 @@ namespace CustomCollections
 
         private bool HasAvailableMemory(double percentageFilling = 0.7)
         {
-            var hasAvailableMemory = (int)Capacity * percentageFilling > Count;
+            var hasAvailableMemory = Capacity * percentageFilling > Count;
             return hasAvailableMemory;
         }
 
@@ -292,12 +288,12 @@ namespace CustomCollections
             _hashTable = newHashTable;
         }
 
-        private bool IsKeysEqual(TKey leftItem, TKey rightKey)
+        private static bool IsKeysEqual(TKey leftItem, TKey rightKey)
         {
             return EqualityComparer<TKey>.Default.Equals(leftItem, rightKey);
         }
 
-        private bool IsValuesEqual(TValue leftItem, TValue rightItem)
+        private static bool IsValuesEqual(TValue leftItem, TValue rightItem)
         {
             return EqualityComparer<TValue>.Default.Equals(leftItem, rightItem);
         }
