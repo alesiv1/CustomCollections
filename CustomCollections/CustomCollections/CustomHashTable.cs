@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace CustomCollections
 {
     public class CustomHashTable<TKey, TValue> : IDictionary<TKey, TValue>
     {
-        protected class CustomHashTableElement
+        public class CustomHashTableElement
         {
             public TKey Key { get; set; }
             public TValue Value { get; set; }
@@ -54,20 +55,7 @@ namespace CustomCollections
             {
                 throw new ArgumentException("This key is already exist in hash table", nameof(item.Key));
             }
-            var position = GetPosition(item.Key);
-            if (_hashTable[position] == null)
-            {
-                _hashTable[position] = new CustomHashTableElement(item.Key, item.Value);
-            }
-            else
-            {
-                var element = _hashTable[position];
-                while (element.Next != null)
-                {
-                    element = element.Next;
-                }
-                element.Next = new CustomHashTableElement(item.Key, item.Value);
-            }
+            Add(ref _hashTable, item.Key, item.Value);
             Count++;
         }
 
@@ -92,12 +80,30 @@ namespace CustomCollections
                 {
                     throw new ArgumentNullException(nameof(key));
                 }
-                var element = GetElementByKey(key);
-                if (element == null)
+                var position = _hashTable.GetPositionInHashTableByKey(key);
+                if (_hashTable[position] == null)
                 {
-                    throw new ArgumentException("This key isn't exist in hash table", nameof(key));
+                    _hashTable[position] = new CustomHashTableElement(key, value);
+                    Count++;
                 }
-                element.Value = value;
+                else
+                {
+                    var element = _hashTable[position];
+                    while (element.Next != null)
+                    {
+                        if(IsKeysEqual(key, element.Key)) break;
+                        element = element.Next;
+                    }
+                    if (IsKeysEqual(key, element.Key))
+                    {
+                        element.Value = value;
+                    }
+                    else
+                    {
+                        element.Next = new CustomHashTableElement(key, value);
+                        Count++;
+                    }
+                }
             }
         }
 
@@ -167,13 +173,13 @@ namespace CustomCollections
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            var position = GetPosition(key);
+            var position = _hashTable.GetPositionInHashTableByKey(key);
             if (_hashTable[position] == null) return false;
             var element = _hashTable[position];
             CustomHashTableElement parent = null;
-            while (!IsKeysEqual(element.Key, key))
+            while (element.Next != null)
             {
-                if(element.Next == null) break;
+                if(IsKeysEqual(element.Key, key)) break;
                 parent = element;
                 element = element.Next;
             }
@@ -208,20 +214,6 @@ namespace CustomCollections
             return GetEnumerator();
         }
 
-        private int GetPosition(TKey key, bool isExpands = false)
-        {
-            var hash = 0;
-            var prefix = 0;
-            var capacity = isExpands ? Capacity * 2 : Capacity;
-            foreach (var symbol in key.ToString())
-            {
-                prefix++;
-                hash += symbol * prefix;
-            }
-            var pos = Math.Abs(hash % capacity);
-            return pos;
-        }
-
         private bool HasAvailableMemory(double percentageFilling = 0.7)
         {
             var hasAvailableMemory = Capacity * percentageFilling > Count;
@@ -230,19 +222,18 @@ namespace CustomCollections
 
         private CustomHashTableElement GetElementByKey(TKey key)
         {
-            var position = GetPosition(key);
+            var position = _hashTable.GetPositionInHashTableByKey(key);
             if (_hashTable[position] == null) return null;
             var element = _hashTable[position];
-            while (!IsKeysEqual(element.Key, key))
+            while (element != null)
             {
-                if (element.Next == null) break;
+                if (IsKeysEqual(element.Key, key))
+                {
+                    return element;
+                }
                 element = element.Next;
             }
-            if (!IsKeysEqual(element.Key, key))
-            {
-                element = null;
-            }
-            return element;
+            return null;
         }
 
         private ICollection<TKey> GetKeys()
@@ -265,27 +256,32 @@ namespace CustomCollections
             return values;
         }
 
-        private void IncreaseSize()
+        private void IncreaseSize(int howMuchToIncrease = 2)
         {
-            var newHashTable = new CustomHashTableElement[Capacity * 2];
+            var newHashTable = new CustomHashTableElement[Capacity * howMuchToIncrease];
             foreach (var item in this)
             {
-                var position = GetPosition(item.Key, true);
-                if (newHashTable[position] == null)
-                {
-                    newHashTable[position] = new CustomHashTableElement(item.Key, item.Value);
-                }
-                else
-                {
-                    var element = newHashTable[position];
-                    while (element.Next != null)
-                    {
-                        element = element.Next;
-                    }
-                    element.Next = new CustomHashTableElement(item.Key, item.Value);
-                }
+                Add(ref newHashTable, item.Key, item.Value);
             }
             _hashTable = newHashTable;
+        }
+
+        private static void Add(ref CustomHashTableElement[] hashTable, TKey key, TValue value)
+        {
+            var position = hashTable.GetPositionInHashTableByKey(key);
+            if (hashTable[position] == null)
+            {
+                hashTable[position] = new CustomHashTableElement(key, value);
+            }
+            else
+            {
+                var element = hashTable[position];
+                while (element.Next != null)
+                {
+                    element = element.Next;
+                }
+                element.Next = new CustomHashTableElement(key, value);
+            }
         }
 
         private static bool IsKeysEqual(TKey leftItem, TKey rightKey)
@@ -296,6 +292,27 @@ namespace CustomCollections
         private static bool IsValuesEqual(TValue leftItem, TValue rightItem)
         {
             return EqualityComparer<TValue>.Default.Equals(leftItem, rightItem);
+        }
+    }
+
+    public static class ExtensionClassForCustomHashTable
+    {
+        public static int GetPositionInHashTableByKey<TKey, TValue>(this CustomHashTable<TKey,TValue>.CustomHashTableElement[] hashTable, TKey key)
+        {
+            return GetPosition(hashTable.Length, key);
+        }
+
+        public static int GetPosition<TKey>(int capacity, TKey key)
+        {
+            var hash = 0;
+            var prefix = 0;
+            foreach (var symbol in key.ToString())
+            {
+                prefix++;
+                hash += symbol * prefix;
+            }
+            var pos = Math.Abs(hash % capacity);
+            return pos;
         }
     }
 }
