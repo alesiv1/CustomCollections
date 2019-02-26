@@ -31,31 +31,27 @@ namespace CustomCollectionsTests
         [Test]
         public void Contains_SomeElement_ReturnTrue()
         {
-            CustomHashTable<string, int> hashTable = new CustomHashTable<string, int>
+            CustomHashTable<string, int> hashTable = new CustomHashTable<string, int>();
+            for (var index = 1; index <= 100; index++)
+                hashTable.Add(index.ToString(), index);
+            for (var index = 1; index <= 100; index++)
             {
-                { "1", 1 },
-                { "2", 2 },
-                { "13", 35 }
-            };
-
-            var containsItem = hashTable.Contains(new KeyValuePair<string, int>("13", 35));
-
-            Assert.IsTrue(containsItem);
+                var containsItem = hashTable.Contains(new KeyValuePair<string, int>(index.ToString(), index));
+                Assert.IsTrue(containsItem);
+            }
         }
 
         [Test]
         public void Contains_SomeElement_ReturnFalse()
         {
-            CustomHashTable<string, int> hashTable = new CustomHashTable<string, int>
+            CustomHashTable<string, int> hashTable = new CustomHashTable<string, int>();
+            for (var index = 1; index <= 100; index++)
+                hashTable.Add(index.ToString(), index);
+            for (var index = 100; index <= 200; index++)
             {
-                { "1", 1 },
-                { "2", 2 },
-                { "13", 35 }
-            };
-
-            var containsItem = hashTable.Contains(new KeyValuePair<string, int>("13", 31));
-
-            Assert.IsFalse(containsItem);
+                var containsItem = hashTable.Contains(new KeyValuePair<string, int>(index.ToString(), 35));
+                Assert.IsFalse(containsItem);
+            }
         }
 
         [Test]
@@ -100,23 +96,17 @@ namespace CustomCollectionsTests
         [Test]
         public void CopyTo_ArrayContainItemsWithHashTable_ReturnTrue()
         {
-            CustomHashTable<int, char> hashTable = new CustomHashTable<int, char>
+            CustomHashTable<int, char> hashTable = new CustomHashTable<int, char>();
+            KeyValuePair<int, char>[] array = new KeyValuePair<int, char>[100];
+            for (int i = 0; i < 100; i++)
             {
-                { 1, 't' },
-                { 2, 'y' },
-                { 4, 'i' },
-                { 5, 'c' },
-                { 6, 'r' },
-                { 13, 'o' }
-            };
-            KeyValuePair<int, char>[] array = new KeyValuePair<int, char>[7];
-            array[0] = new KeyValuePair<int, char>(0, 'v');
-            
-            hashTable.CopyTo(array, 1);
+                hashTable.Add(i, i.ToString()[0]);
+            }
+            hashTable.CopyTo(array, 0);
 
-            for (int i = 1; i < 7; i++)
+            foreach (var item in array)
             {
-                Assert.AreEqual(array[i].Value, hashTable[array[i].Key]);
+                Assert.AreEqual(item.Value, hashTable[item.Key]);
             }
         }
 
@@ -168,31 +158,33 @@ namespace CustomCollectionsTests
         [Test]
         public void Remote_Element_ReturnTrue()
         {
-            CustomHashTable<string, int> hashTable = new CustomHashTable<string, int>
+            CustomHashTable<string, int> hashTable = new CustomHashTable<string, int>();
+            for (int i = 0; i < 100; i++)
             {
-                { "1", 1 },
-                { "2", 2 },
-                { "13", 35 }
-            };
+                hashTable.Add(i.ToString(), i);
+            }
 
-            var isRemote = hashTable.Remove(new KeyValuePair<string, int>("13", 35));
-
-            Assert.IsTrue(isRemote);
+            for (int i = 0; i < 100; i++)
+            {
+                var isRemote = hashTable.Remove(new KeyValuePair<string, int>(i.ToString(), i));
+                Assert.IsTrue(isRemote);
+            }
         }
 
         [Test]
         public void Remote_Element_ReturnFalse()
         {
-            CustomHashTable<string, int> hashTable = new CustomHashTable<string, int>
+            CustomHashTable<string, int> hashTable = new CustomHashTable<string, int>();
+            for (int i = 0; i < 100; i++)
             {
-                { "1", 1 },
-                { "2", 2 },
-                { "13", 35 }
-            };
+                hashTable.Add(i.ToString(), i);
+            }
 
-            var isRemote = hashTable.Remove("3");
-
-            Assert.IsFalse(isRemote);
+            for (int i = 100; i < 200; i++)
+            {
+                var isRemote = hashTable.Remove(new KeyValuePair<string, int>(i.ToString(), i));
+                Assert.IsFalse(isRemote);
+            }
         }
 
         [Test]
@@ -233,9 +225,9 @@ namespace CustomCollectionsTests
                 new KeyValuePair<int, string>( 6, "6")
             };
 
-            foreach (var elemen in hashTable)
+            foreach (var element in hashTable)
             {
-                Assert.IsTrue(sameElements.Contains(elemen));
+                Assert.IsTrue(sameElements.Contains(element));
             }
         }
 
