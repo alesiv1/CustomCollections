@@ -146,7 +146,7 @@ namespace CustomCollectionsTests
 
             try
             {
-                hashTable.Add(new KeyValuePair<int, string>(13, "2"));
+                hashTable.Add(13, "2");
                 Assert.IsTrue(true);
             }
             catch
@@ -166,7 +166,7 @@ namespace CustomCollectionsTests
 
             for (int i = 0; i < 100; i++)
             {
-                var isRemote = hashTable.Remove(new KeyValuePair<string, int>(i.ToString(), i));
+                var isRemote = hashTable.Remove(i.ToString(), i);
                 Assert.IsTrue(isRemote);
             }
         }
@@ -182,7 +182,7 @@ namespace CustomCollectionsTests
 
             for (int i = 100; i < 200; i++)
             {
-                var isRemote = hashTable.Remove(new KeyValuePair<string, int>(i.ToString(), i));
+                var isRemote = hashTable.Remove(i.ToString(), i);
                 Assert.IsFalse(isRemote);
             }
         }

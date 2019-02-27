@@ -41,22 +41,22 @@ namespace CustomCollections
 
         public void Add(TKey key, TValue value)
         {
-            Add(new KeyValuePair<TKey, TValue>(key, value));
-        }
-
-        public void Add(KeyValuePair<TKey, TValue> item)
-        {
-            if (item.Key == null)
+            if (key == null)
             {
-                throw new ArgumentNullException(nameof(item.Key));
+                throw new ArgumentNullException(nameof(key));
             }
             if (!HasAvailableMemory()) IncreaseSize();
-            if (ContainsKey(item.Key))
+            if (ContainsKey(key))
             {
-                throw new ArgumentException("This key is already exist in hash table", nameof(item.Key));
+                throw new ArgumentException("This key is already exist in hash table", nameof(key));
             }
-            Add(ref _hashTable, item.Key, item.Value);
+            Add(ref _hashTable, key, value);
             Count++;
+        }
+
+        void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item)
+        {
+            Add(item.Key, item.Value);
         }
 
         public TValue this[TKey key]
@@ -80,29 +80,16 @@ namespace CustomCollections
                 {
                     throw new ArgumentNullException(nameof(key));
                 }
-                var position = _hashTable.GetPositionInHashTableByKey(key);
-                if (_hashTable[position] == null)
+
+                var element = GetElementByKey(key);
+                if (element == null)
                 {
+                    var position = _hashTable.GetPositionInHashTableByKey(key);
                     _hashTable[position] = new CustomHashTableElement(key, value);
-                    Count++;
                 }
                 else
                 {
-                    var element = _hashTable[position];
-                    while (element.Next != null)
-                    {
-                        if(IsKeysEqual(key, element.Key)) break;
-                        element = element.Next;
-                    }
-                    if (IsKeysEqual(key, element.Key))
-                    {
-                        element.Value = value;
-                    }
-                    else
-                    {
-                        element.Next = new CustomHashTableElement(key, value);
-                        Count++;
-                    }
+                    element.Value = value;
                 }
             }
         }
@@ -161,7 +148,12 @@ namespace CustomCollections
             }
         }
 
-        public bool Remove(KeyValuePair<TKey, TValue> item)
+        public bool Remove(TKey key, TValue value)
+        {
+            return ((ICollection<KeyValuePair<TKey, TValue>>)this).Remove(new KeyValuePair<TKey, TValue>(key, value));
+        }
+
+        bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item)
         {
             if (!Contains(item)) return false;
             return Remove(item.Key);
