@@ -259,9 +259,9 @@ namespace CustomCollections
         private void IncreaseSize(int howMuchToIncrease = 2)
         {
             var newHashTable = new CustomHashTableElement[Capacity * howMuchToIncrease];
-            foreach (var item in this)
+            foreach (var (key, value) in this)
             {
-                Add(ref newHashTable, item.Key, item.Value);
+                Add(ref newHashTable, key, value);
             }
             _hashTable = newHashTable;
         }
@@ -295,7 +295,7 @@ namespace CustomCollections
         }
     }
 
-    public static class ExtensionClassForCustomHashTable
+    public static class ExtensionCustomHashTableClass
     {
         public static int GetPositionInHashTableByKey<TKey, TValue>(this CustomHashTable<TKey,TValue>.CustomHashTableElement[] hashTable, TKey key)
         {
